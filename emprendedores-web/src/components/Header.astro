@@ -1,0 +1,89 @@
+---
+// Componente de navegación principal
+const currentPath = Astro.url.pathname;
+const isActive = (path) => currentPath.startsWith(path);
+---
+<nav class="bg-white h-[104px] px-6 lg:px-[120px] flex justify-between items-center relative z-50 border-b border-gray-100 shadow-sm">
+  <a href="/" class="flex items-center shrink-0">
+    <img src="/logo_emprendedores-color.png" alt="Emprendedores" class="w-[200px] h-auto" />
+  </a>
+  
+  <button id="hamburger-menu" class="lg:hidden flex flex-col gap-[6px] z-50 cursor-pointer border-none bg-transparent p-2">
+    <span class="w-[30px] h-[3px] bg-brand-dark rounded-sm transition-transform duration-300 origin-center"></span>
+    <span class="w-[30px] h-[3px] bg-brand-dark rounded-sm transition-opacity duration-300"></span>
+    <span class="w-[30px] h-[3px] bg-brand-dark rounded-sm transition-transform duration-300 origin-center"></span>
+  </button>
+  
+  <div id="nav-links" class="hidden lg:flex flex-col lg:flex-row absolute lg:static top-[104px] left-0 w-full lg:w-auto bg-white lg:bg-transparent px-6 py-6 lg:py-0 lg:px-0 shadow-xl lg:shadow-none gap-4 lg:gap-5 xl:gap-6 items-start lg:items-center">
+    
+    <!-- Menú Desplegable: MODELOS -->
+    <div class="relative group w-full lg:w-auto border-b border-gray-100 lg:border-none pb-4 lg:pb-0 lg:h-full flex flex-col lg:flex-row lg:items-center">
+      <a href="/modelos" class={`font-semibold text-sm uppercase flex items-center hover:text-brand-dark transition-colors py-2 lg:py-0 w-full justify-between lg:justify-start tracking-wide ${isActive('/modelos') ? 'text-brand' : 'text-text hover:text-brand'}`}>
+        MODELOS 
+        <svg class="w-4 h-4 ml-1 transform group-hover:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+      </a>
+      
+      <div class="block lg:hidden lg:group-hover:block lg:absolute lg:top-full lg:left-0 lg:pt-4 w-full lg:w-auto z-50">
+        <ul class="bg-gray-50 lg:bg-white lg:min-w-[200px] lg:shadow-lg rounded-xl lg:border border-gray-100 py-2 lg:py-3 mt-2 lg:mt-0 overflow-hidden">
+          <li><a href="/modelos/ct-125" class="block text-text px-5 lg:px-6 py-2.5 text-sm font-semibold uppercase hover:bg-blue-50 hover:text-brand transition-colors">CT 125</a></li>
+          <li><a href="/modelos/boxer-150" class="block text-text px-5 lg:px-6 py-2.5 text-sm font-semibold uppercase hover:bg-blue-50 hover:text-brand transition-colors">Boxer 150</a></li>
+        </ul>
+      </div>
+    </div>
+    
+    <a href="/distribuidores" class={`font-semibold text-sm uppercase transition-colors py-2 lg:py-0 block w-full lg:w-auto border-b border-gray-100 lg:border-none pb-4 lg:pb-0 tracking-wide whitespace-nowrap ${isActive('/distribuidores') ? 'text-brand' : 'text-text hover:text-brand'}`}>Red de Distribuidores</a>
+    
+    <a href="/promociones" class={`font-semibold text-sm uppercase transition-colors py-2 lg:py-0 block w-full lg:w-auto border-b border-gray-100 lg:border-none pb-4 lg:pb-0 tracking-wide ${isActive('/promociones') ? 'text-brand' : 'text-text hover:text-brand'}`}>Promociones</a>
+
+    <!-- Menú Desplegable: GARANTÍA -->
+    <div class="relative group w-full lg:w-auto border-b border-gray-100 lg:border-none pb-4 lg:pb-0 lg:h-full flex flex-col lg:flex-row lg:items-center">
+      <button type="button" class={`font-semibold text-sm uppercase flex items-center hover:text-brand-dark transition-colors py-2 lg:py-0 w-full justify-between lg:justify-start tracking-wide cursor-pointer bg-transparent border-none ${isActive('/garantia') ? 'text-brand' : 'text-text hover:text-brand'}`}>
+        GARANTÍA
+        <svg class="w-4 h-4 ml-1 transform group-hover:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      
+      <div class="block lg:hidden lg:group-hover:block lg:absolute lg:top-full lg:left-0 lg:pt-4 w-full lg:w-auto z-50">
+        <ul class="bg-gray-50 lg:bg-white lg:min-w-[240px] lg:shadow-lg rounded-xl lg:border border-gray-100 py-2 lg:py-3 mt-2 lg:mt-0 overflow-hidden">
+          <li>
+            <a href="/garantia/politica" class={`block px-5 lg:px-6 py-2.5 text-sm font-semibold uppercase hover:bg-blue-50 hover:text-brand transition-colors ${isActive('/garantia/politica') ? 'text-brand bg-blue-50/50' : 'text-text'}`}>
+              Política de Garantías
+            </a>
+          </li>
+          <li>
+            <a href="/garantia/mantenimiento" class={`block px-5 lg:px-6 py-2.5 text-sm font-semibold uppercase hover:bg-blue-50 hover:text-brand transition-colors ${isActive('/garantia/mantenimiento') ? 'text-brand bg-blue-50/50' : 'text-text'}`}>
+              Plan de Mantenimiento
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <a href="/contactanos" class={`font-semibold text-sm uppercase transition-colors py-2 lg:py-0 block w-full lg:w-auto tracking-wide ${isActive('/contactanos') ? 'text-brand' : 'text-text hover:text-brand'}`}>Contáctanos</a>
+
+    <!-- Botón: Agendar Test Ride (Conexión a WhatsApp con texto prellenado) -->
+    <a href="https://wa.me/51953216828?text=Hola,%20quisiera%20agendar%20un%20Test%20Ride." target="_blank" rel="noopener noreferrer" class="mt-2 lg:mt-0 w-full lg:w-auto bg-brand text-white font-semibold text-sm uppercase px-5 py-2.5 rounded-lg hover:bg-brand-dark transition-colors tracking-wide text-center whitespace-nowrap">
+      AGENDAR TEST RIDE
+    </a>
+  </div>
+</nav>
+
+<script>
+  const hamburger = document.getElementById('hamburger-menu');
+  const navLinks = document.getElementById('nav-links');
+  
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('hidden');
+      navLinks.classList.toggle('flex');
+      
+      const spans = hamburger.querySelectorAll('span');
+      if (spans.length === 3) {
+        spans[0].classList.toggle('translate-y-[9px]');
+        spans[0].classList.toggle('rotate-45');
+        spans[1].classList.toggle('opacity-0');
+        spans[2].classList.toggle('-translate-y-[9px]');
+        spans[2].classList.toggle('-rotate-45');
+      }
+    });
+  }
+</script>

@@ -1,0 +1,74 @@
+---
+// src/pages/modelos/[slug].astro
+import Layout from '../../layouts/Layout.astro';
+import ModalCotizacion from '../../components/ModalCotizacion.astro';
+import { sanityClient } from "sanity:client";
+
+import HeroShowroom from '../../components/modelos/HeroShowroom.astro';
+import HighlightBento from '../../components/modelos/HighlightBento.astro';
+import TechSpecsEditorial from '../../components/modelos/TechSpecsEditorial.astro';
+
+// 1. getStaticPaths busca TODAS las motos en Sanity y crea una ruta por cada una
+export async function getStaticPaths() {
+  // Se añade && defined(slug.current) para evitar errores si una moto no tiene slug
+  const query = `*[_type == "motorcycle" && defined(slug.current)]{
+    "slug": slug.current,
+    name,
+    watermark,
+    intro,
+    "images360": hero360Images[].asset->url,
+    highlights[]{
+      title,
+      accentText,
+      description,
+      "icon": icon.asset->url
+    },
+    colors[]{
+      name,
+      hex,
+      "sideImage": sideImage.asset->url
+    },
+    techSpecs[]{
+      label,
+      value
+    }
+  }`;
+
+  const motos = await sanityClient.fetch(query);
+
+  // Le devolvemos a Astro un array con los parámetros (el slug para la URL) y los datos (props)
+  return motos.map((moto) => {
+    return {
+      params: { slug: moto.slug },
+      props: { moto },
+    };
+  });
+}
+
+// 2. Extraemos la información de la moto que Astro nos pasa por las props
+const { moto } = Astro.props;
+---
+
+<Layout>
+  <main class="w-full bg-white overflow-hidden">
+    
+    <HeroShowroom 
+      name={moto.name} 
+      watermark={moto.watermark} 
+      intro={moto.intro} 
+      images360={moto.images360} 
+    />
+    
+    <HighlightBento 
+      highlights={moto.highlights} 
+    />
+    
+    <TechSpecsEditorial 
+      colors={moto.colors} 
+      techSpecs={moto.techSpecs} 
+    />
+
+  </main>
+  
+  <ModalCotizacion />
+</Layout>

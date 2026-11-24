@@ -1,0 +1,248 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { sanityClient } from "sanity:client";
+
+// CAMBIO 1: Actualizamos la consulta para pedir 'email' en lugar de 'phone'
+const query = `*[_type == "dealer"]{
+  name,
+  city,
+  address,
+  lat,
+  lng,
+  email,
+  services
+}`;
+
+const rawDealers = await sanityClient.fetch(query);
+
+const dealers = rawDealers.map((dealer: any) => {
+  let safeServices = [];
+  if (Array.isArray(dealer.services)) {
+    safeServices = dealer.services;
+  } else if (typeof dealer.services === 'string') {
+    safeServices = [dealer.services]; 
+  }
+  
+  return {
+    ...dealer,
+    services: safeServices
+  };
+});
+
+const uniqueCities = [...new Set(dealers.map((d: any) => d.city))].sort();
+---
+
+<Layout>
+  <!-- Estilos base de Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <main class="w-full bg-[#F3F4F6] min-h-screen pb-20">
+    
+    <!-- Hero Section (Modificado a bg-brand para el azul clásico) -->
+    <section class="w-full bg-brand pt-16 pb-20 lg:pt-20 lg:pb-24">
+      <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px] text-center">
+        <h1 class="text-4xl lg:text-5xl font-bold text-white mb-4 tracking-tight uppercase">ENCUENTRA TU DISTRIBUIDOR</h1>
+        <p class="text-lg text-blue-100 font-medium">Ubica tu centro de ventas o taller autorizado más cercano.</p>
+      </div>
+    </section>
+
+    <!-- Sección Principal del Mapa -->
+    <section class="-mt-10 lg:-mt-12 relative z-20">
+      <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px]">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6 lg:gap-8 items-stretch">
+          
+          <!-- Columna Izquierda: Buscador y Lista (En móvil va abajo) -->
+          <div class="bg-white rounded-2xl shadow-xl border border-gray-100 flex flex-col h-auto lg:h-[750px] overflow-hidden order-2 lg:order-1">
+            
+            <!-- Controles de Filtros -->
+            <div class="p-6 bg-gray-50 border-b border-gray-100 flex flex-col gap-5">
+              
+              <!-- Filtro de Ciudad -->
+              <div>
+                <label for="city-filter" class="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-wide">Ubicación</label>
+                <div class="relative">
+                  <select id="city-filter" class="w-full appearance-none bg-white border border-gray-200 text-text font-semibold text-sm rounded-lg px-4 py-3 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all cursor-pointer">
+                    <option value="all">Todas las ciudades</option>
+                    {uniqueCities.map(city => (
+                      <option value={city}>{city}</option>
+                    ))}
+                  </select>
+                  <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Filtro de Servicios -->
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-3 tracking-wide">Servicios Requeridos</label>
+                <div class="flex flex-wrap gap-2" id="filtro-servicios">
+                  <label class="cursor-pointer">
+                    <input type="checkbox" value="Ventas" class="peer sr-only" />
+                    <span class="inline-block px-4 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full peer-checked:bg-brand peer-checked:text-white peer-checked:border-brand hover:border-brand transition-all select-none">Ventas</span>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" value="Repuestos" class="peer sr-only" />
+                    <span class="inline-block px-4 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full peer-checked:bg-brand peer-checked:text-white peer-checked:border-brand hover:border-brand transition-all select-none">Repuestos</span>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" value="Servicios" class="peer sr-only" />
+                    <span class="inline-block px-4 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full peer-checked:bg-brand peer-checked:text-white peer-checked:border-brand hover:border-brand transition-all select-none">Servicios</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lista de Tarjetas -->
+            <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+              {dealers && dealers.length > 0 ? (
+                <div id="dealers-list" class="flex flex-col gap-4">
+                  {dealers.map((dealer: any, index: number) => (
+                    <div class="dealer-card bg-white border border-gray-100 rounded-xl p-5 cursor-pointer hover:border-gray-300 hover:-translate-y-0.5 transition-all shadow-sm [&.active]:border-brand [&.active]:ring-1 [&.active]:ring-brand [&.active]:shadow-md" data-lat={dealer.lat} data-lng={dealer.lng} data-city={dealer.city} data-service={dealer.services.join(',')} data-index={index}>
+                      
+                      <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
+                        <span class="text-[10px] font-bold px-2.5 py-1 rounded bg-blue-50 text-brand tracking-wide">
+                          {dealer.services.length > 0 ? dealer.services.join(' • ').toUpperCase() : 'NO ESPECIFICADO'}
+                        </span>
+                        <span class="text-[11px] font-bold text-gray-400 uppercase">{dealer.city}</span>
+                      </div>
+                      
+                      <h3 class="text-lg font-bold text-text mb-2">{dealer.name}</h3>
+                      <p class="text-sm text-gray-500 mb-3 leading-relaxed">{dealer.address}</p>
+                      
+                      {dealer.email && (
+                        <div class="flex items-center gap-2 text-text font-semibold text-sm bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                          <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                          <span class="truncate">{dealer.email}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div class="text-center py-10">
+                  <p class="text-gray-500 font-medium">No se encontraron distribuidores registrados.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Mapa (En móvil va arriba) -->
+          <div class="bg-gray-200 rounded-2xl overflow-hidden shadow-xl h-[450px] lg:h-[750px] border border-gray-100 order-1 lg:order-2">
+            <div id="map" class="w-full h-full z-10" data-dealers={JSON.stringify(dealers)}></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+</Layout>
+
+<!-- Scripts lógicos sin modificaciones (Leaflet) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const mapElement = document.getElementById('map');
+    if (!mapElement) return;
+
+    const dealersData = JSON.parse(mapElement.getAttribute('data-dealers') || '[]');
+    
+    const defaultCenter: [number, number] = [-12.046374, -77.042793];
+    const defaultZoom = 6;
+    const map = L.map('map').setView(defaultCenter, defaultZoom);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(map);
+
+    const markersGroup = L.featureGroup().addTo(map);
+    const markersData: { marker: L.Marker; city: string }[] = [];
+
+    dealersData.forEach((dealer: any, index: number) => {
+      const isValidLat = dealer.lat && dealer.lat >= -90 && dealer.lat <= 90 && dealer.lat !== 0;
+      const isValidLng = dealer.lng && dealer.lng >= -180 && dealer.lng <= 180 && dealer.lng !== 0;
+
+      if (isValidLat && isValidLng) {
+        const marker = L.marker([dealer.lat, dealer.lng]);
+        
+        // Popup rediseñado visualmente para alinearse con Tailwind
+        const popupContent = `
+          <div style="font-family: 'Poppins', sans-serif; min-width: 220px; padding: 4px;">
+            <h4 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #181B20;">${dealer.name}</h4>
+            <p style="margin: 0 0 12px 0; font-size: 13px; color: #6B7280; line-height: 1.4;">${dealer.address}</p>
+            ${dealer.email ? `<div style="margin-bottom: 12px; background: #F9FAFB; padding: 8px; border-radius: 6px; border: 1px solid #F3F4F6;"><a href="mailto:${dealer.email}" style="display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; color: #181B20; text-decoration: none;">✉️ <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">${dealer.email}</span></a></div>` : ''}
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${dealer.lat},${dealer.lng}" target="_blank" style="display: block; width: 100%; background: #FAD20F; color: #000615; text-align: center; padding: 10px; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 700; box-sizing: border-box; transition: background 0.2s;">CÓMO LLEGAR</a>
+          </div>
+        `;
+        marker.bindPopup(popupContent);
+        markersGroup.addLayer(marker);
+        markersData.push({ marker, city: dealer.city });
+      } else {
+        markersData.push(null as any);
+      }
+    });
+
+    const dealerCards = document.querySelectorAll('.dealer-card');
+    const cityFilter = document.getElementById('city-filter') as HTMLSelectElement;
+    const serviceCheckboxes = document.querySelectorAll('#filtro-servicios input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+
+    function applyFilters() {
+      const selectedCity = cityFilter.value;
+      
+      const selectedServices = Array.from(serviceCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+      
+      markersGroup.clearLayers();
+      let hasVisibleMarkers = false;
+
+      dealerCards.forEach((card, index) => {
+        const cardCity = card.getAttribute('data-city');
+        const cardServices = card.getAttribute('data-service') || "";
+        
+        const matchCity = selectedCity === 'all' || cardCity === selectedCity;
+        const matchService = selectedServices.every(service => cardServices.includes(service));
+        
+        if (matchCity && matchService) {
+          (card as HTMLElement).style.display = 'block'; 
+          if (markersData[index] && markersData[index].marker) {
+            markersGroup.addLayer(markersData[index].marker);
+            hasVisibleMarkers = true;
+          }
+        } else {
+          (card as HTMLElement).style.display = 'none'; 
+        }
+      });
+
+      if (hasVisibleMarkers) {
+        if (selectedCity === 'all' && selectedServices.length === 0) {
+          map.setView(defaultCenter, defaultZoom); 
+        } else {
+          map.fitBounds(markersGroup.getBounds(), { padding: [50, 50], maxZoom: 15 });
+        }
+      }
+    }
+
+    if(cityFilter) cityFilter.addEventListener('change', applyFilters);
+    serviceCheckboxes.forEach(cb => cb.addEventListener('change', applyFilters));
+
+    dealerCards.forEach((card, index) => {
+      card.addEventListener('click', () => {
+        const lat = parseFloat(card.getAttribute('data-lat') || '0');
+        const lng = parseFloat(card.getAttribute('data-lng') || '0');
+        
+        if (lat && lng) {
+          map.flyTo([lat, lng], 16, { duration: 1.5 });
+          if (markersData[index] && markersData[index].marker) {
+            markersData[index].marker.openPopup();
+          }
+          dealerCards.forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+        }
+      });
+    });
+  });
+</script>

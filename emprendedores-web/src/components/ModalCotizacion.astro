@@ -1,0 +1,130 @@
+---
+// src/components/ModalCotizacion.astro
+---
+
+<div id="cotizacion-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+  <div class="bg-white w-full max-w-lg mx-4 rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 relative" id="cotizacion-modal-content">
+    
+    <!-- Botón Cerrar -->
+    <button id="close-modal" class="absolute top-5 right-5 text-gray-400 hover:text-brand transition-colors" aria-label="Cerrar modal">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <div class="p-8 lg:p-10">
+      <h2 class="text-2xl lg:text-3xl font-black text-brand-dark uppercase tracking-tight mb-2">Cotizar Moto</h2>
+      <p class="text-gray-500 text-sm mb-6 font-medium">Déjanos tus datos y un asesor se comunicará contigo a la brevedad.</p>
+
+      <form action="https://formsubmit.co/croslandautomotriz@gmail.com" method="POST" class="flex flex-col gap-4">
+        
+        <!-- Configuraciones ocultas de FormSubmit -->
+        <input type="hidden" name="_subject" value="Nuevo Lead - Emprendedores Bajaj">
+        <input type="hidden" name="_captcha" value="false">
+
+        <!-- Selector de Modelo -->
+        <div>
+          <label for="modelo" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Modelo de interés</label>
+          <div class="relative">
+            <select id="modelo" name="Modelo" required class="w-full bg-white border border-gray-200 text-brand-dark rounded-xl px-4 py-3 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all appearance-none cursor-pointer font-bold">
+              <option value="" disabled selected>Selecciona un modelo</option>
+              <option value="CT 125">CT 125</option>
+              <option value="Boxer 150">Boxer 150</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="nombre" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Nombre completo</label>
+            <input type="text" id="nombre" name="Nombre" required placeholder="Ej. Juan Pérez" class="w-full bg-white border border-gray-200 text-gray-800 rounded-xl px-4 py-3 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder:text-gray-300">
+          </div>
+          <div>
+            <label for="dni" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">DNI</label>
+            <input type="text" id="dni" name="DNI" required placeholder="Número de documento" class="w-full bg-white border border-gray-200 text-gray-800 rounded-xl px-4 py-3 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder:text-gray-300">
+          </div>
+        </div>
+        
+        <div>
+          <label for="email" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Email</label>
+          <input type="email" id="email" name="Email" required placeholder="tu@correo.com" class="w-full bg-white border border-gray-200 text-gray-800 rounded-xl px-4 py-3 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder:text-gray-300">
+        </div>
+        
+        <div>
+          <label for="telefono" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Teléfono / WhatsApp</label>
+          <input type="tel" id="telefono" name="Telefono" required placeholder="+51 999 999 999" class="w-full bg-white border border-gray-200 text-gray-800 rounded-xl px-4 py-3 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder:text-gray-300">
+        </div>
+        
+        <button type="submit" class="w-full bg-accent-yellow text-support-dark font-black text-lg uppercase tracking-wide py-4 rounded-xl mt-2 hover:bg-[#e5c00d] transition-transform hover:-translate-y-1 shadow-lg cursor-pointer">
+          Enviar mis datos
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('cotizacion-modal');
+    const modalContent = document.getElementById('cotizacion-modal-content');
+    const closeBtn = document.getElementById('close-modal');
+    const selectorModelo = document.getElementById('modelo') as HTMLSelectElement;
+    
+    // Captura todos los botones con la clase btn-abrir-modal (incluyendo el del HeroShowroom)
+    const openBtns = document.querySelectorAll('.btn-abrir-modal');
+
+    const openModal = (modelo: string | null) => {
+      if(modelo && selectorModelo) {
+        // Verifica si el modelo enviado por el botón existe en el select
+        const optionExists = Array.from(selectorModelo.options).some(opt => opt.value === modelo);
+        // Si no existe (ej. es un modelo nuevo desde Sanity), lo crea al vuelo
+        if (!optionExists) {
+          const newOption = new Option(modelo, modelo);
+          selectorModelo.add(newOption);
+        }
+        selectorModelo.value = modelo;
+      }
+      
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      // Retraso minúsculo para que la transición de Tailwind se ejecute fluidamente
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modalContent.classList.remove('scale-95');
+      }, 10);
+    };
+
+    const closeModal = () => {
+      modal.classList.add('opacity-0');
+      modalContent.classList.add('scale-95');
+      
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }, 300);
+    };
+
+    openBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const modeloAsignado = btn.getAttribute('data-modelo');
+        openModal(modeloAsignado);
+      });
+    });
+
+    if(closeBtn) closeBtn.addEventListener('click', closeModal);
+    
+    // Cierra el modal si se hace clic fuera de la caja blanca
+    if(modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
+  });
+</script>

@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-light: #387BBE;
+  --color-brand: #2353AC;
+  --color-brand-dark: #003D7A;
+  --color-accent-yellow: #FAD20F;
+  --color-support-dark: #000615;
+  --color-text: #181B20;
+
+  --font-sans: 'Poppins', sans-serif;
+}

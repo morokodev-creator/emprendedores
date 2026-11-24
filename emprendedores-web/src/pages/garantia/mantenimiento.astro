@@ -1,0 +1,208 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { sanityClient } from 'sanity:client';
+
+const query = `*[_type == "maintenancePlanPage"][0]{
+  heroTitle,
+  heroSubtitle,
+  "heroBgUrl": heroBackground.asset->url,
+  contentTitle,
+  contentDescription,
+  firstYearTitle,
+  firstYearServices[]{
+    serviceName,
+    months,
+    mileage
+  },
+  yearNTitle,
+  yearNServices[]{
+    serviceName,
+    months,
+    mileage
+  },
+  tableFootnote
+}`;
+
+const pageData = await sanityClient.fetch(query);
+
+// Datos de respaldo por si aún no se cargan en Sanity
+const firstYearServices = pageData?.firstYearServices?.length > 0 ? pageData.firstYearServices : [
+  { serviceName: '1ero', months: '2', mileage: '500' },
+  { serviceName: '2do', months: '3', mileage: '3.000' },
+  { serviceName: '3ro', months: '6', mileage: '6.000' },
+  { serviceName: '4to', months: '9', mileage: '9.000' },
+];
+
+const yearNServices = pageData?.yearNServices?.length > 0 ? pageData.yearNServices : [
+  { serviceName: '5to', months: '12', mileage: '12.000' },
+  { serviceName: 'Nvo', months: 'Cada 3 meses hasta finalizar el tiempo de garantía.', mileage: 'Cada 3.000 km hasta finalizar el kilometraje de garantía.' },
+];
+
+const firstYearTitle = pageData?.firstYearTitle || 'PRIMER AÑO';
+const yearNTitle = pageData?.yearNTitle || '... AÑO N';
+const footnote = pageData?.tableFootnote || 'El kilometraje aceptado para la revisión está en un rango de más o menos 500km.';
+---
+
+<Layout>
+  <main class="w-full bg-[#F3F4F6] min-h-screen">
+    
+    <!-- Hero Banner (Idéntico a Promociones) -->
+    <section 
+      class="relative w-full h-[350px] lg:h-[450px] flex items-center bg-[#111] bg-cover bg-center bg-no-repeat"
+      style={pageData?.heroBgUrl ? `background-image: linear-gradient(180deg, rgba(17,17,17,0.7) 0%, rgba(17,17,17,0.95) 100%), url('${pageData.heroBgUrl}');` : ''}
+    >
+      <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px] text-center lg:text-left relative z-10 mt-12 lg:mt-0">
+        <h1 class="text-4xl lg:text-[64px] font-black text-white uppercase tracking-tight mb-4 leading-none">
+          {pageData?.heroTitle || 'PLAN DE MANTENIMIENTO'}
+        </h1>
+        <p class="text-lg lg:text-xl text-gray-300 font-medium max-w-2xl mx-auto lg:mx-0">
+          {pageData?.heroSubtitle || 'Mantén tu moto siempre operativa siguiendo el cronograma de revisiones periódicas.'}
+        </p>
+      </div>
+    </section>
+
+    <!-- Sección de Contenido y Cuadro -->
+    <section class="py-16 lg:py-24">
+      <div class="w-full max-w-[1440px] mx-auto px-6 lg:px-[80px]">
+        
+        <!-- Encabezado explicativo -->
+        <div class="max-w-3xl mx-auto text-center mb-12 lg:mb-16">
+          <h2 class="text-3xl lg:text-4xl font-bold text-text uppercase tracking-tight mb-4">
+            {pageData?.contentTitle || 'Cronograma de Servicios Periódicos'}
+          </h2>
+          <p class="text-base lg:text-lg text-gray-600 leading-relaxed font-medium">
+            {pageData?.contentDescription || 'Para mantener vigente la garantía y asegurar el máximo rendimiento de tu moto, cumple con cada revisión en nuestros talleres autorizados según el tiempo o kilometraje que ocurra primero.'}
+          </p>
+        </div>
+
+        <!-- VERSIÓN DESKTOP: Matriz horizontal fiel a la referencia -->
+        <div class="hidden lg:block bg-white rounded-2xl shadow-xl border-t-4 border-brand overflow-hidden">
+          <div class="p-10 xl:p-12 overflow-x-auto">
+            <table class="w-full border-collapse text-left">
+              <thead>
+                <tr>
+                  <th colspan={1 + firstYearServices.length} class="pb-8 pr-6 text-2xl font-bold text-brand uppercase tracking-wide border-r border-gray-200">
+                    {firstYearTitle}
+                  </th>
+                  <th colspan={yearNServices.length} class="pb-8 pl-8 text-2xl font-bold text-brand uppercase tracking-wide">
+                    {yearNTitle}
+                  </th>
+                </tr>
+                <tr class="border-b border-gray-200">
+                  <th class="py-5 pr-6 text-sm font-bold text-text w-[220px]">Servicio</th>
+                  {firstYearServices.map((item: any, idx: number) => (
+                    <th class={`py-5 px-4 text-sm font-bold text-text ${idx === firstYearServices.length - 1 ? 'border-r border-gray-200 pr-6' : ''}`}>
+                      {item.serviceName}
+                    </th>
+                  ))}
+                  {yearNServices.map((item: any, idx: number) => (
+                    <th class={`py-5 px-4 text-sm font-bold text-text ${idx === 0 ? 'pl-8' : ''}`}>
+                      {item.serviceName}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 text-sm text-gray-600">
+                <tr>
+                  <td class="py-6 pr-6 font-bold text-text align-top">Meses después de la compra</td>
+                  {firstYearServices.map((item: any, idx: number) => (
+                    <td class={`py-6 px-4 align-top font-medium ${idx === firstYearServices.length - 1 ? 'border-r border-gray-200 pr-6' : ''}`}>
+                      {item.months}
+                    </td>
+                  ))}
+                  {yearNServices.map((item: any, idx: number) => (
+                    <td class={`py-6 px-4 align-top font-medium max-w-[240px] leading-relaxed ${idx === 0 ? 'pl-8' : ''}`}>
+                      {item.months}
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <td class="py-6 pr-6 font-bold text-text align-top">Rango de kilometraje</td>
+                  {firstYearServices.map((item: any, idx: number) => (
+                    <td class={`py-6 px-4 align-top font-medium ${idx === firstYearServices.length - 1 ? 'border-r border-gray-200 pr-6' : ''}`}>
+                      {item.mileage}
+                    </td>
+                  ))}
+                  {yearNServices.map((item: any, idx: number) => (
+                    <td class={`py-6 px-4 align-top font-medium max-w-[240px] leading-relaxed ${idx === 0 ? 'pl-8' : ''}`}>
+                      {item.mileage}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- VERSIÓN MOBILE: Tarjetas apiladas por periodo -->
+        <div class="lg:hidden flex flex-col gap-8">
+          
+          <!-- Bloque Primer Año -->
+          <div class="bg-white rounded-2xl shadow-lg border-t-4 border-brand p-6">
+            <h3 class="text-xl font-bold text-brand uppercase tracking-wide mb-5">
+              {firstYearTitle}
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {firstYearServices.map((item: any) => (
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200/80">
+                  <div class="inline-block bg-brand text-white text-xs font-bold uppercase px-3 py-1 rounded-md mb-3">
+                    Servicio {item.serviceName}
+                  </div>
+                  <div class="flex flex-col gap-2 text-sm">
+                    <div class="flex justify-between gap-3 border-b border-gray-200 pb-2">
+                      <span class="font-semibold text-gray-500">Meses:</span>
+                      <span class="font-bold text-text text-right">{item.months}</span>
+                    </div>
+                    <div class="flex justify-between gap-3 pt-1">
+                      <span class="font-semibold text-gray-500">Kilometraje:</span>
+                      <span class="font-bold text-text text-right">{item.mileage}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <!-- Bloque Año N -->
+          <div class="bg-white rounded-2xl shadow-lg border-t-4 border-brand p-6">
+            <h3 class="text-xl font-bold text-brand uppercase tracking-wide mb-5">
+              {yearNTitle}
+            </h3>
+            <div class="flex flex-col gap-4">
+              {yearNServices.map((item: any) => (
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200/80">
+                  <div class="inline-block bg-brand text-white text-xs font-bold uppercase px-3 py-1 rounded-md mb-3">
+                    Servicio {item.serviceName}
+                  </div>
+                  <div class="flex flex-col gap-3 text-sm">
+                    <div class="border-b border-gray-200 pb-2">
+                      <span class="block font-semibold text-gray-500 mb-0.5">Meses después de la compra:</span>
+                      <span class="font-bold text-text">{item.months}</span>
+                    </div>
+                    <div>
+                      <span class="block font-semibold text-gray-500 mb-0.5">Rango de kilometraje:</span>
+                      <span class="font-bold text-text">{item.mileage}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Nota informativa al pie -->
+        {footnote && (
+          <div class="mt-6 flex items-start sm:items-center gap-3 px-2 text-gray-600 text-sm lg:text-base">
+            <span class="shrink-0 w-6 h-6 rounded-full border-2 border-brand text-brand flex items-center justify-center font-bold text-xs mt-0.5 sm:mt-0">
+              i
+            </span>
+            <p class="font-medium">{footnote}</p>
+          </div>
+        )}
+
+      </div>
+    </section>
+
+  </main>
+</Layout>

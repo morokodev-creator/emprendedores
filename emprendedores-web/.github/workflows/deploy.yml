@@ -1,0 +1,39 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+  repository_dispatch:
+    types: [sanity_update]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Compilar Astro
+        run: npm run build
+
+      - name: Subir a cPanel por FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          protocol: ftps
+          port: 21
+          security-ignore-cert: true

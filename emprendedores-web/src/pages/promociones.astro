@@ -1,0 +1,112 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { sanityClient } from "sanity:client";
+
+// Función para extraer el ID del video de YouTube sin importar el formato del link
+function getYouTubeId(url) {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
+// Consulta unificada: Trae la info del Hero y la lista de promociones correcta
+const query = `{
+  "pageData": *[_type == "promotionsPage"][0]{
+    heroTitle,
+    heroSubtitle,
+    "heroBgUrl": heroBackground.asset->url
+  },
+  "promotions": *[_type == "promotionsPage"][0].promotionsList[]{
+    title,
+    mediaType,
+    youtubeUrl,
+    "bannerUrl": bannerImage.asset->url,
+    "pdfUrl": termsPdf.asset->url
+  }
+}`;
+
+const { pageData, promotions } = await sanityClient.fetch(query);
+---
+
+<Layout>
+  <main class="w-full bg-white min-h-screen">
+    
+    <!-- Hero Banner dinámico conectado a Sanity -->
+    <section 
+      class="relative w-full h-[350px] lg:h-[450px] flex items-center bg-[#111] bg-cover bg-center bg-no-repeat"
+      style={pageData?.heroBgUrl ? `background-image: linear-gradient(180deg, rgba(17,17,17,0.7) 0%, rgba(17,17,17,0.95) 100%), url('${pageData.heroBgUrl}');` : ''}
+    >
+      <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px] text-center lg:text-left relative z-10 mt-12 lg:mt-0">
+        <h1 class="text-4xl lg:text-[64px] font-black text-white uppercase tracking-tight mb-4 leading-none">
+          {pageData?.heroTitle || 'PROMOCIONES'}
+        </h1>
+        <p class="text-lg lg:text-xl text-gray-300 font-medium max-w-2xl mx-auto lg:mx-0">
+          {pageData?.heroSubtitle || 'Descubre los beneficios vigentes para tu próxima moto.'}
+        </p>
+      </div>
+    </section>
+
+    <!-- Listado de Promociones dinámicas -->
+    <section class="py-16 lg:py-24">
+      <div class="w-full max-w-5xl mx-auto px-6 lg:px-0 flex flex-col gap-16 lg:gap-24">
+        {promotions && promotions.length > 0 ? (
+          promotions.map((promo) => (
+            <div class="flex flex-col gap-6 group">
+              
+              <h3 class="text-2xl lg:text-4xl font-black text-brand-dark uppercase tracking-tight leading-tight">
+                {promo.title}
+              </h3>
+              
+              <!-- LÓGICA CONDICIONAL: VIDEO VS IMAGEN -->
+              <div class="w-full rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl bg-[#111] transition-transform duration-500">
+                {promo.mediaType === 'video' && promo.youtubeUrl ? (
+                  <div class="relative w-full pt-[56.25%]">
+                    <iframe 
+                      src={`https://www.youtube.com/embed/${getYouTubeId(promo.youtubeUrl)}`} 
+                      title={promo.title}
+                      class="absolute top-0 left-0 w-full h-full"
+                      frameborder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowfullscreen>
+                    </iframe>
+                  </div>
+                ) : (
+                  <div class="w-full h-[250px] sm:h-[350px] lg:h-[450px]">
+                    {promo.bannerUrl ? (
+                      <img src={promo.bannerUrl} alt={promo.title} class="w-full h-full object-cover" />
+                    ) : (
+                      <div class="w-full h-full bg-gray-100 flex items-center justify-center">
+                        <span class="text-gray-400 font-bold uppercase tracking-widest text-sm">Imagen no disponible</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <!-- LÓGICA CONDICIONAL: BOTÓN DE TÉRMINOS Y CONDICIONES -->
+              {promo.pdfUrl && (
+                <div class="flex justify-end mt-2">
+                  <a 
+                    href={promo.pdfUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    class="bg-accent-yellow text-support-dark px-10 py-4 rounded-xl font-bold text-sm lg:text-base uppercase hover:bg-[#e5c00d] transition-transform hover:-translate-y-1 shadow-lg w-full sm:w-auto text-center"
+                  >
+                    Términos y Condiciones
+                  </a>
+                </div>
+              )}
+              
+            </div>
+          ))
+        ) : (
+          <div class="text-center py-24 bg-gray-50 rounded-3xl border border-gray-100">
+            <p class="text-gray-500 text-lg font-bold tracking-widest uppercase">No hay promociones vigentes por el momento.</p>
+          </div>
+        )}
+      </div>
+    </section>
+
+  </main>
+</Layout>

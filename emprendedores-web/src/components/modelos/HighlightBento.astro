@@ -1,0 +1,43 @@
+---
+// src/components/modelos/HighlightBento.astro
+const { highlights = [] } = Astro.props;
+
+// Array de iconos SVG genéricos para iterar sobre las tarjetas (Fallback)
+const fallbackIcons = [
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8"><path d="M3 22v-4a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v4"></path><path d="M7 14V6a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v8"></path><path d="M17 10h4v2a2 2 0 0 1-2 2h-2"></path></svg>',
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>',
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>',
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>'
+];
+---
+
+<section class="py-24 lg:py-32 bg-support-dark relative z-20">
+  <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px]">
+    
+    <div class="text-center max-w-3xl mx-auto mb-16 lg:mb-24">
+      <h2 class="text-3xl lg:text-5xl font-bold text-white uppercase tracking-tight">Lo más destacado</h2>
+      <div class="w-24 h-1.5 bg-accent-yellow mx-auto mt-6 rounded-full"></div>
+    </div>
+
+    <!-- Renderizado dinámico de las tarjetas desde Sanity -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-6xl mx-auto">
+      {highlights && highlights.map((item: any, index: number) => (
+        <div class="bg-white rounded-3xl p-8 lg:p-10 shadow-xl hover:-translate-y-1 transition-transform duration-300 group">
+          <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-brand mb-6 group-hover:bg-brand group-hover:text-white transition-all duration-300">
+            {item.icon ? (
+              <img src={item.icon} alt={item.title} class="w-8 h-8 object-contain transition-all duration-300 group-hover:brightness-0 group-hover:invert" />
+            ) : (
+              <span set:html={fallbackIcons[index % 4]} class="flex items-center justify-center"></span>
+            )}
+          </div>
+          <h3 class="text-xl lg:text-2xl font-bold text-brand-dark mb-4 leading-tight">
+            {item.title}<br/>
+            <span class="text-brand">{item.accentText}</span>
+          </h3>
+          <p class="text-gray-600 leading-relaxed font-medium">{item.description}</p>
+        </div>
+      ))}
+    </div>
+
+  </div>
+</section>

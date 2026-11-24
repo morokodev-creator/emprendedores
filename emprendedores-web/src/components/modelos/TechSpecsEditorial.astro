@@ -1,0 +1,110 @@
+---
+// src/components/modelos/TechSpecsEditorial.astro
+const { colors = [], techSpecs = [] } = Astro.props;
+const defaultImage = colors?.length > 0 && colors[0]?.sideImage ? colors[0].sideImage : "/images/placeholder.webp";
+---
+
+<section class="py-24 lg:py-32 bg-white relative overflow-hidden border-t border-gray-100">
+  <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px]">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-stretch">
+      
+      <!-- Columna Izquierda (Moto y Colores) -->
+      <div class="lg:col-span-5 flex flex-col justify-between relative order-1 lg:order-1 h-full">
+        
+        <!-- Contenedor del Título y Texto modificado -->
+        <div class="w-full text-center lg:text-left">
+          <h2 class="text-3xl lg:text-5xl font-black text-brand-dark uppercase tracking-tight mb-4 leading-tight">
+            Especificaciones
+          </h2>
+          <p class="text-gray-500 font-medium text-lg">
+            Conoce los detalles técnicos que hacen de este modelo tu mejor herramienta de trabajo.
+          </p>
+        </div>
+
+        <div class="relative w-full flex-grow flex flex-col items-center justify-center my-10 lg:my-0">
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 lg:w-96 lg:h-96 bg-blue-50 rounded-full blur-3xl z-0"></div>
+          
+          <div id="specs-data" data-colors={JSON.stringify(colors)} class="hidden"></div>
+          
+          <img 
+            id="specs-side-image"
+            src={defaultImage} 
+            alt="Especificaciones Técnicas" 
+            class="relative z-10 w-full max-w-[500px] h-auto drop-shadow-xl transition-opacity duration-300" 
+          />
+        </div>
+
+        <!-- Renderizado dinámico de colores -->
+        {colors && colors.length > 0 && (
+          <div class="relative z-20 flex flex-col items-center lg:items-start w-full">
+            <span class="block text-xs font-bold text-gray-400 tracking-widest uppercase mb-3">Colores disponibles</span>
+            <div class="flex gap-4">
+              {colors.map((color: any, index: number) => (
+                <button 
+                  class={`color-swatch w-10 h-10 rounded-full cursor-pointer transition-all duration-300 shadow-md ${index === 0 ? 'scale-110 ring-2 ring-offset-4 ring-brand-dark' : 'ring-2 ring-transparent hover:scale-110'}`} 
+                  style={`background-color: ${color.hex}`}
+                  data-color-idx={index}
+                  aria-label={`Color ${color.name}`}
+                  title={color.name}
+                ></button>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      <!-- Columna Derecha (Especificaciones dinámicas) -->
+      <div class="lg:col-span-7 flex flex-col gap-3 relative z-10 order-2 lg:order-2">
+        {techSpecs && techSpecs.map((spec: any) => (
+          <div class="group relative flex flex-col sm:flex-row sm:items-center justify-between p-6 lg:p-7 bg-[#F8F9FA] rounded-2xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 overflow-hidden cursor-default">
+            <div class="absolute left-0 top-0 h-full w-1.5 bg-accent-yellow transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+            <span class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-0 group-hover:text-brand transition-colors duration-300">
+              {spec.label}
+            </span>
+            <span class="text-lg lg:text-xl font-black text-brand-dark text-left sm:text-right w-full sm:w-2/3">
+              {spec.value}
+            </span>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const colorSwatches = document.querySelectorAll('.color-swatch');
+    const specsImage = document.getElementById('specs-side-image') as HTMLImageElement;
+    const specsDataElement = document.getElementById('specs-data');
+
+    if (specsDataElement && specsImage && colorSwatches.length > 0) {
+      const colorsData = JSON.parse(specsDataElement.getAttribute('data-colors') || '[]');
+
+      colorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', (e) => {
+          const target = e.currentTarget as HTMLElement;
+          if (!target) return;
+
+          specsImage.style.opacity = '0';
+          setTimeout(() => {
+            colorSwatches.forEach(s => {
+              s.classList.remove('scale-110', 'ring-2', 'ring-offset-4', 'ring-brand-dark');
+              s.classList.add('ring-2', 'ring-transparent');
+            });
+            target.classList.remove('ring-transparent');
+            target.classList.add('scale-110', 'ring-2', 'ring-offset-4', 'ring-brand-dark');
+            
+            const idx = parseInt(target.getAttribute('data-color-idx') || '0', 10);
+            if (colorsData[idx] && colorsData[idx].sideImage) {
+              specsImage.src = colorsData[idx].sideImage;
+            }
+            specsImage.style.opacity = '1';
+          }, 150);
+        });
+      });
+    }
+  });
+</script>

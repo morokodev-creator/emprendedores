@@ -1,0 +1,139 @@
+---
+// src/components/modelos/HeroShowroom.astro
+
+// Recibimos la nueva variable watermark junto con el resto
+const { name = "Modelo", watermark = "MOTO", intro = "", images360 = [] } = Astro.props;
+const fallbackImage = images360.length > 0 ? images360[0] : "/images/placeholder.webp";
+---
+
+<section class="relative w-full min-h-[600px] lg:min-h-[700px] bg-white flex items-center pt-24 pb-16 lg:py-0 overflow-hidden">
+  
+  <!-- Fondo dinámico dividido -->
+  <div class="absolute inset-0 z-0 flex pointer-events-none">
+    <div class="w-full lg:w-[45%] bg-white"></div>
+    <div class="hidden lg:block lg:w-[65%] bg-gradient-to-br from-gray-50 to-gray-200 transform -skew-x-12 translate-x-20 rounded-l-[40px]"></div>
+  </div>
+
+  <!-- Texto Gigante de Fondo (Watermark) - Posicionado más arriba -->
+  <div class="absolute top-[30%] lg:top-[35%] right-0 lg:right-[5%] -translate-y-1/2 z-0 pointer-events-none select-none overflow-hidden flex justify-end w-full">
+    <h2 class="text-[120px] lg:text-[220px] font-black text-gray-900/[0.03] uppercase leading-none tracking-tighter m-0 whitespace-nowrap">
+      {watermark}
+    </h2>
+  </div>
+
+  <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px] grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center relative z-10">
+    
+    <!-- Textos y CTA (En móvil va abajo 'order-2', en escritorio va a la izquierda 'lg:order-1') -->
+    <div class="flex flex-col items-center text-center lg:items-start lg:text-left relative z-20 order-2 lg:order-1">
+      <span class="text-brand font-bold tracking-widest text-sm uppercase mb-4">Tu primera moto</span>
+      <h1 class="text-5xl lg:text-[72px] font-black text-brand-dark leading-none tracking-tight mb-6">
+        {name}
+      </h1>
+      <p class="text-lg lg:text-xl text-gray-600 font-medium leading-relaxed mb-10 max-w-lg">
+        {intro}
+      </p>
+      <button class="btn-abrir-modal bg-accent-yellow text-support-dark px-10 py-4 rounded-xl font-bold text-lg uppercase hover:bg-[#e5c00d] transition-transform hover:-translate-y-1 shadow-lg cursor-pointer w-full sm:w-auto" data-modelo={name}>
+        Cotizar Ahora
+      </button>
+    </div>
+
+    <!-- Contenedor Visor 360 (En móvil va arriba 'order-1', en escritorio va a la derecha 'lg:order-2') -->
+    <div class="relative w-full h-[350px] sm:h-[450px] lg:h-[650px] flex flex-col justify-center items-center mt-8 lg:mt-0 order-1 lg:order-2">
+      
+      <div id="hero-360-data" data-frames={JSON.stringify(images360)} class="hidden"></div>
+      
+      <div class="relative w-full max-w-2xl cursor-grab active:cursor-grabbing flex flex-col items-center z-10" id="hero-360-container">
+        <img 
+          id="hero-360-image" 
+          src={fallbackImage} 
+          alt={name} 
+          class="w-full h-auto object-contain select-none pointer-events-none drop-shadow-2xl"
+          draggable="false"
+        />
+        
+        <!-- NUEVO ICONO 360 (Doble flecha curva simétrica) -->
+        {images360.length > 1 && (
+          <div class="flex flex-col items-center gap-1.5 mt-6 text-gray-400 opacity-60 animate-bounce-x pointer-events-none">
+            <span class="text-sm font-black tracking-widest text-brand-dark">360°</span>
+            <svg class="w-14 h-6" viewBox="0 0 40 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 8 Q 20 20 36 8" />
+              <path d="M30 2 L36 8 L30 14" />
+              <path d="M10 2 L4 8 L10 14" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      <!-- Sombra de piso realista -->
+      <div class="absolute bottom-[10%] lg:bottom-[15%] left-1/2 -translate-x-1/2 w-[70%] h-8 bg-black/20 blur-xl rounded-[100%] z-0 pointer-events-none"></div>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  @keyframes bounce-x { 
+    0%, 100% { transform: translateX(-5px); } 
+    50% { transform: translateX(5px); } 
+  }
+  .animate-bounce-x {
+    animation: bounce-x 2s infinite ease-in-out;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const imageElement360 = document.getElementById('hero-360-image') as HTMLImageElement;
+    const container360 = document.getElementById('hero-360-container');
+    const dataElement360 = document.getElementById('hero-360-data');
+    
+    if (dataElement360 && imageElement360 && container360) {
+      const frames = JSON.parse(dataElement360.getAttribute('data-frames') || '[]');
+      let currentFrame = 0;
+      const totalFrames = frames.length;
+
+      if (totalFrames > 1) {
+        let isDragging = false;
+        let startX = 0;
+        const dragSensitivity = 15; 
+
+        const updateImage = () => {
+          if (frames[currentFrame]) {
+            imageElement360.src = frames[currentFrame];
+          }
+        };
+
+        const handleDragStart = (e: MouseEvent | TouchEvent) => {
+          isDragging = true;
+          startX = 'touches' in e ? e.touches[0].pageX : e.pageX;
+        };
+
+        const handleDragEnd = () => { isDragging = false; };
+
+        const handleDragMove = (e: MouseEvent | TouchEvent) => {
+          if (!isDragging) return;
+          e.preventDefault(); 
+          const currentX = 'touches' in e ? e.touches[0].pageX : e.pageX;
+          const distance = currentX - startX;
+
+          if (Math.abs(distance) > dragSensitivity) {
+            if (distance > 0) {
+              currentFrame = (currentFrame - 1 + totalFrames) % totalFrames;
+            } else {
+              currentFrame = (currentFrame + 1) % totalFrames;
+            }
+            updateImage();
+            startX = currentX;
+          }
+        };
+
+        container360.addEventListener('mousedown', handleDragStart);
+        window.addEventListener('mouseup', handleDragEnd);
+        window.addEventListener('mousemove', handleDragMove);
+        container360.addEventListener('touchstart', handleDragStart, { passive: false });
+        window.addEventListener('touchend', handleDragEnd);
+        window.addEventListener('touchmove', handleDragMove, { passive: false });
+      }
+    }
+  });
+</script>

@@ -1,0 +1,45 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { sanityClient } from "sanity:client";
+import { toHTML } from '@portabletext/to-html';
+
+const query = `*[_type == "termsPage"][0]{
+  title,
+  content
+}`;
+
+const pageData = await sanityClient.fetch(query);
+
+// Convertimos el contenido de Sanity a HTML
+const htmlContent = pageData?.content ? toHTML(pageData.content) : '';
+---
+
+<Layout>
+  <main class="w-full bg-white min-h-screen">
+    
+    <!-- Hero Banner (Cabecera Azul) -->
+    <section class="bg-[#0C4A98] py-16 lg:py-20 text-white">
+      <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px]">
+        <h1 class="text-4xl lg:text-5xl font-black m-0 tracking-tight uppercase">
+          {pageData?.title || 'TÉRMINOS Y CONDICIONES'}
+        </h1>
+      </div>
+    </section>
+
+    <!-- Contenido de texto -->
+    <section class="py-16 lg:py-24">
+      <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px]">
+        <!-- Inyectamos el HTML de Sanity con modificadores de Tailwind -->
+        {htmlContent ? (
+          <div 
+            class="max-w-4xl text-[#111111] text-base leading-relaxed [&>p]:mb-5 [&>strong]:block [&>strong]:font-extrabold [&>strong]:text-lg [&>strong]:mt-8 [&>strong]:mb-2 [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:mb-5 [&>li]:mb-2 [&>a]:text-[#0C4A98] [&>a]:underline" 
+            set:html={htmlContent}
+          ></div>
+        ) : (
+          <p class="text-gray-500 font-medium">Sube el contenido desde Sanity.</p>
+        )}
+      </div>
+    </section>
+
+  </main>
+</Layout>

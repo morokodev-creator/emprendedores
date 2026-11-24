@@ -1,0 +1,119 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { sanityClient } from 'sanity:client';
+
+const query = `*[_type == "warrantyPolicyPage"][0]{
+  heroTitle,
+  heroSubtitle,
+  "heroBgUrl": heroBackground.asset->url,
+  faqSectionTitle,
+  faqs[]{
+    question,
+    answer
+  },
+  downloadBanner{
+    "bgUrl": backgroundImage.asset->url,
+    text,
+    buttonText,
+    "pdfUrl": pdfFile.asset->url
+  }
+}`;
+
+const pageData = await sanityClient.fetch(query);
+---
+
+<Layout>
+  <main class="w-full bg-white min-h-screen">
+    
+    <!-- Hero Banner (Idéntico a Promociones) -->
+    <section 
+      class="relative w-full h-[350px] lg:h-[450px] flex items-center bg-[#111] bg-cover bg-center bg-no-repeat"
+      style={pageData?.heroBgUrl ? `background-image: linear-gradient(180deg, rgba(17,17,17,0.7) 0%, rgba(17,17,17,0.95) 100%), url('${pageData.heroBgUrl}');` : ''}
+    >
+      <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px] text-center lg:text-left relative z-10 mt-12 lg:mt-0">
+        <h1 class="text-4xl lg:text-[64px] font-black text-white uppercase tracking-tight mb-4 leading-none">
+          {pageData?.heroTitle || 'POLÍTICA DE GARANTÍAS'}
+        </h1>
+        <p class="text-lg lg:text-xl text-gray-300 font-medium max-w-2xl mx-auto lg:mx-0">
+          {pageData?.heroSubtitle || 'Conoce el respaldo y la cobertura que protege tu moto de trabajo todos los días.'}
+        </p>
+      </div>
+    </section>
+
+    <!-- Sección FAQ (Acordeón) -->
+    <section class="py-16 lg:py-24 bg-[#F3F4F6]">
+      <div class="w-full max-w-4xl mx-auto px-6">
+        <div class="text-center mb-12 lg:mb-16">
+          <h2 class="text-3xl lg:text-4xl font-bold text-text uppercase tracking-tight">
+            {pageData?.faqSectionTitle || 'Preguntas Frecuentes'}
+          </h2>
+        </div>
+
+        {pageData?.faqs && pageData.faqs.length > 0 ? (
+          <div class="flex flex-col gap-4">
+            {pageData.faqs.map((faq: any, index: number) => (
+              <details class="group bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden transition-all" open={index === 0}>
+                <summary class="flex items-center justify-between gap-4 p-6 lg:p-7 cursor-pointer list-none font-bold text-base lg:text-lg text-text hover:text-brand transition-colors">
+                  <span>{faq.question}</span>
+                  <span class="shrink-0 w-8 h-8 rounded-full bg-blue-50 text-brand flex items-center justify-center transition-transform duration-300 group-open:rotate-180">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="px-6 lg:px-7 pb-6 lg:pb-7 pt-0 text-gray-600 text-base leading-relaxed whitespace-pre-line border-t border-gray-100 mt-1 pt-4">
+                  {faq.answer}
+                </div>
+              </details>
+            ))}
+          </div>
+        ) : (
+          <div class="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <p class="text-gray-500 font-medium">Agrega las preguntas frecuentes desde el panel de Sanity.</p>
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- Banner de Descarga PDF -->
+    <section class="relative py-20 lg:py-28 overflow-hidden flex items-center justify-center bg-support-dark">
+      <div class="absolute inset-0 z-0">
+        {pageData?.downloadBanner?.bgUrl ? (
+          <img src={pageData.downloadBanner.bgUrl} alt="Descargar Política de Garantía" class="w-full h-full object-cover object-center" />
+        ) : (
+          <div class="w-full h-full bg-brand"></div>
+        )}
+      </div>
+
+      <div class="absolute inset-0 bg-support-dark/80 mix-blend-multiply z-10"></div>
+
+      <div class="w-full max-w-[1920px] mx-auto px-6 lg:px-[120px] relative z-20 text-center">
+        <div class="max-w-3xl mx-auto">
+          <p class="text-xl lg:text-2xl text-white font-semibold mb-10 leading-relaxed">
+            {pageData?.downloadBanner?.text || 'Descarga el documento completo con todas las condiciones, coberturas y detalles de nuestra política de garantía.'}
+          </p>
+          
+          {pageData?.downloadBanner?.pdfUrl ? (
+            <a 
+              href={`${pageData.downloadBanner.pdfUrl}?dl=`}
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center justify-center gap-3 bg-accent-yellow text-support-dark px-8 lg:px-10 py-4 rounded-xl font-bold text-sm lg:text-base uppercase hover:bg-[#e5c00d] transition-transform hover:-translate-y-1 shadow-lg w-full sm:w-auto"
+            >
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              <span>{pageData.downloadBanner.buttonText || 'DESCARGAR POLÍTICA DE GARANTÍA'}</span>
+            </a>
+          ) : (
+            <span class="inline-block bg-white/10 text-white/70 px-8 py-4 rounded-xl font-semibold text-sm uppercase border border-white/20">
+              Sube el documento PDF en Sanity para habilitar la descarga
+            </span>
+          )}
+        </div>
+      </div>
+    </section>
+
+  </main>
+</Layout>
